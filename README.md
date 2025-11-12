@@ -54,7 +54,3 @@ It provides a simple serial interface to **charge capacitors**, **fire kick or c
 | `BAUD_RATE` | 115,200 | Serial communication speed |
 | `TIMEOUT` | 5,000 ms | Charge timeout |
 | `KICK_CHIP_DELAY` | 5,000 µs | Delay before firing after input |
-
-
-### 🧪 Example Serial Session
-
