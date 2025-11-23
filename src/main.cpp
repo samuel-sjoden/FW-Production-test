@@ -22,7 +22,6 @@ volatile bool caps_charged = false;
 volatile bool charging = false;
 volatile bool finished_charing = false;
 hw_timer_t *timer = NULL;
-SemaphoreHandle_t timer_lock = xSemaphoreCreateBinary();
 unsigned long t0;
 
 void setup() {
@@ -42,7 +41,6 @@ void setup() {
   // Assuming clock speed is 80MHz
   timer = timerBegin(0, 80, true);
   timerAttachInterrupt(timer, &stopPulse, true);
-  xSemaphoreGive(timer_lock);
 }
 
 void loop() {
@@ -109,27 +107,22 @@ void IRAM_ATTR stopPulse() {
   else if (current_mode == CHIP) {
     digitalWrite(PIN_CHIP, LOW); 
   }
-  xSemaphoreGiveFromISR(timer_lock, NULL); 
 }
 
 
 void sendPulse(const int pulse_length, const String& action) {
-  if(xSemaphoreTake(timer_lock, portMAX_DELAY)) {
-    timerWrite(timer, 0);
-    timerAlarmWrite(timer, pulse_length, false); 
+  timerWrite(timer, 0);
+  timerAlarmWrite(timer, pulse_length, false); 
 
-    if (action.equalsIgnoreCase("Chip")){
-      digitalWrite(PIN_CHIP, HIGH);
-      current_mode = CHIP;
+  if (action.equalsIgnoreCase("Chip")){
+    digitalWrite(PIN_CHIP, HIGH);
+    current_mode = CHIP;
 
-    } else if (action.equalsIgnoreCase("kick")){
-      digitalWrite(PIN_KICK, HIGH);
-      current_mode = KICK;
-    }
-    // Start the timer to last for the pulse length starting at 0. Do not repeat.
-    timerAlarmEnable(timer);
-  } else {
-    Serial.println("Pulse failed. Existing pulse");
+  } else if (action.equalsIgnoreCase("kick")){
+    digitalWrite(PIN_KICK, HIGH);
+    current_mode = KICK;
   }
+  // Start the timer to last for the pulse length starting at 0. Do not repeat.
+  timerAlarmEnable(timer);
 }
 
